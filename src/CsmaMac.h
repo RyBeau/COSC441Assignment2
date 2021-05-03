@@ -31,13 +31,23 @@ class CsmaMac : public cSimpleModule {
 public:
 
   // your public methods and data members
-  ...
+  void initialize();
   
 protected:
 
   // your protected methods and data members
-  ...
-  
+  int     ownAddress;
+  int     bufferSize;
+  int     maxBackoffs;
+  int     maxAttempts;
+  int64_t     macOverheadSizeData;
+  int64_t     macOverheadSizeAck;
+  double  macAckDelay;
+  double  ackTimeout;
+  int fromHigherId;
+  int toHigherId;
+  int fromTransceiverId;
+  int toTransceiverId;
 
 private:
 
