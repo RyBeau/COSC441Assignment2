@@ -3,6 +3,13 @@
 
 Define_Module(CsmaMac);
 
+simsignal_t bufferLossSigId = cComponent::registerSignal("bufferLossSig");
+simsignal_t bufferEnteredSigId = cComponent::registerSignal("bufferEnteredSig");
+simsignal_t numberAttemptsSigId = cComponent::registerSignal("numberAttemptsSigId");
+simsignal_t accessFailedSigId = cComponent::registerSignal("accessFailedSig");
+simsignal_t accessSuccessSigId = cComponent::registerSignal("accessSuccessSig");
+
+
 void CsmaMac::initialize () {
     ownAddress = par("ownAddress");
     bufferSize = par("bufferSize");
