@@ -37,26 +37,35 @@ void CsmaMac::handleMessage(cMessage* msg){
     int arrivalGate = msg->getArrivalGateId();
 
     if (dynamic_cast<CSResponse*>(msg) && arrivalGate == fromTransceiverId){
+        dbg_string("Received CSReponse Message");
         handleCSResponse((CSResponse) msg);
+        dbg_leave("handleMessage");
+        return;
     }
 
-    if(msg == backOffComplete){
+    if(msg == backOffComplete){ //Need to check message on buffer
         if (currentAttempts < maxAttempts){
             performCarrierSense();
         } else {
+            dbg_string("Max Attempts Reached");
             //TODO Drop packet?
         }
+        dbg_leave("handleMessage");
+        return;
     }
     delete msg;
-    dbg_leave("handleMessage");
+    error("Transceiver::handleMessage: unexpected message");
 }
 
 /**
  * Sends the CSRequest message to the transceiver.
  */
 void CsmaMac::performCarrierSense(){
+    dbg_enter("performCarrierSense");
     CSRequest* request = new CSRequest;
+    dbg_string("Sending CSRequest");
     send(request, toTransceiverId);
+    dbg_leave("performCarrierSense");
 }
 
 /**
@@ -69,11 +78,13 @@ void CsmaMac::handleCSReponse(CSRsponse* response){
     } else {
         if (currentBackoffs < maxBackoffs){
             currentBackoffs++;
-            dbg
+            dbg_string("Beginning CSResponse Backoff");
             beginBackoff(par("csBackoffDistribution").doubleValue());
         } else {
+            dbg_string("Max backoffs reached");
             currentBackoffs = 0;
             currentAttempts++;
+            dbg_string("Beginning Attempts Backoff");
             beginBackoff(par("attBackoffDistribution").doubleValue());
         }
     }
