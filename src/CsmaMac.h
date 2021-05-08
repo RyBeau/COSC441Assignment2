@@ -58,7 +58,7 @@ private:
   int currentBackoffs = 0;
   int currentAttempts = 0;
   void performCarrierSense();
-  void transmitPacket();
+  void transmitHOLPacket();
   void handleCSResponse(CSResponse* response);
   void beginBackoff(double backOffTime);
   

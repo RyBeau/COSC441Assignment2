@@ -54,7 +54,7 @@ void CsmaMac::handleMessage(cMessage* msg){
         return;
     }
     delete msg;
-    error("Transceiver::handleMessage: unexpected message");
+    error("CsmaMac::handleMessage: unexpected message");
 }
 
 /**
@@ -74,7 +74,7 @@ void CsmaMac::performCarrierSense(){
 void CsmaMac::handleCSReponse(CSRsponse* response){
     dbg_enter("handleCSResponse");
     if (!response->busyChannel){
-        transmitPacket();
+        transmitHOLPacket();
     } else {
         if (currentBackoffs < maxBackoffs){
             currentBackoffs++;
@@ -95,7 +95,7 @@ void CsmaMac::handleCSReponse(CSRsponse* response){
 /**
  * Transmits the HOL packet on the channel
  */
-void CsmaMac::transmitPacket(){
+void CsmaMac::transmitHOLPacket(){
     dbg_enter("transmitPacket");
     //TODO Transmit Packet Currently on Buffer.
     dbg_leave("transmitPacket");
