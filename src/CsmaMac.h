@@ -15,14 +15,15 @@ using namespace omnetpp;
 
 // design a state machine and suitable states, name them here ..
 enum MacState {
-  ...
+    STATE_BACKOFF, STATE_IDLE, STATE_CS, STATE_TCONF, STATE_ACK
 };
 
 
 
 // string names for your states (for debugging purposes)
-const char * const stateStrings[] = {
-  ...
+const char * const stateStrings[5] = {
+  "Wait for backoff to conclude", "Wait for incoming packet", "Wait for carrier sensing to conclude",
+  "Wait to receive TransmissionConfirmation", "Wait to receive Acknowledgement"
 };
 
 
@@ -32,12 +33,26 @@ public:
 
   // your public methods and data members
   void  initialize();
+  void  initialize();
   void handleMessage(cMessage* msg);
   ~CsmaMac();
   
 protected:
 
   // your protected methods and data members
+  int       ownAddress;
+  int       bufferSize;
+  int       maxBackoffs;
+  int       maxAttempts;
+  int64_t   macOverheadSizeData;
+  int64_t   macOverheadSizeAck;
+  double    macAckDelay;
+  double    ackTimeout;
+  int       fromHigherId;
+  int       toHigherId;
+  int       fromTransceiverId;
+  int       toTransceiverId;
+  int       currentState = STATE_IDLE;
   int       ownAddress;
   int       bufferSize;
   int       maxBackoffs;
