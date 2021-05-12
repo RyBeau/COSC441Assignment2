@@ -33,7 +33,6 @@ public:
 
   // your public methods and data members
   void  initialize();
-  void  initialize();
   void handleMessage(cMessage* msg);
   ~CsmaMac();
   
