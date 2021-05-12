@@ -53,18 +53,6 @@ protected:
   int       fromTransceiverId;
   int       toTransceiverId;
   int       currentState = STATE_IDLE;
-  int       ownAddress;
-  int       bufferSize;
-  int       maxBackoffs;
-  int       maxAttempts;
-  int64_t   macOverheadSizeData;
-  int64_t   macOverheadSizeAck;
-  double    macAckDelay;
-  double    ackTimeout;
-  int       fromHigherId;
-  int       toHigherId;
-  int       fromTransceiverId;
-  int       toTransceiverId;
   cMessage* backOffComplete;
 
 private:
@@ -76,7 +64,11 @@ private:
   void transmitHOLPacket();
   void handleCSResponse(CSResponse* response);
   void beginBackoff(double backOffTime);
-  
+  void dbg_prefix();
+  void dbg_enter (std::string methname);
+  void dbg_leave (std::string methname);
+  void dbg_string(std::string str);
+  void popHOLPacket();
 };
 
 
