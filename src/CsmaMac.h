@@ -33,6 +33,8 @@ public:
 
   // your public methods and data members
   void  initialize();
+  void handleMessage(cMessage* msg);
+  ~CsmaMac();
   
 protected:
 
@@ -50,12 +52,22 @@ protected:
   int       fromTransceiverId;
   int       toTransceiverId;
   int       currentState = STATE_IDLE;
+  cMessage* backOffComplete;
 
 private:
 
   // your private methods and data members
-  ...
-  
+  int currentBackoffs = 0;
+  int currentAttempts = 0;
+  void performCarrierSense();
+  void transmitHOLPacket();
+  void handleCSResponse(CSResponse* response);
+  void beginBackoff(double backOffTime);
+  void dbg_prefix();
+  void dbg_enter (std::string methname);
+  void dbg_leave (std::string methname);
+  void dbg_string(std::string str);
+  void popHOLPacket();
 };
 
 
