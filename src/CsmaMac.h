@@ -7,8 +7,12 @@
 #define CSMAMAC_H_
 
 #include <omnetpp.h>
-// further includes ...
-
+#include "AppMessage_m.h"
+#include "CSRequest_m.h"
+#include "CSResponse_m.h"
+#include "MacPacket_m.h"
+#include "MacPacketType_m.h"
+#include "TransmissionRequest_m.h"
 
 using namespace omnetpp;
 
@@ -68,6 +72,8 @@ private:
   void dbg_leave (std::string methname);
   void dbg_string(std::string str);
   void popHOLPacket();
+  MacPacket* encapsulateAppMessage(AppMessage* message);
+  TransmissionRequest* CsmaMac::encapsulateMacPacket(MacPacket* macPacket);
 };
 
 

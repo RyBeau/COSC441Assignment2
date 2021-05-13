@@ -1,5 +1,11 @@
 //TODO implement what is outlined in the ned and .h file
 #include "CsmaMac.h"
+#include "AppMessage_m.h"
+#include "CSRequest_m.h"
+#include "CSResponse_m.h"
+#include "MacPacket_m.h"
+#include "MacPacketType_m.h"
+#include "TransmissionRequest_m.h"
 
 Define_Module(CsmaMac);
 
@@ -54,6 +60,7 @@ void CsmaMac::handleMessage(cMessage* msg){
         dbg_leave("handleMessage");
         return;
     }
+
     delete msg;
     error("CsmaMac::handleMessage: unexpected message");
 }
@@ -73,7 +80,7 @@ void CsmaMac::performCarrierSense(){
 /**
  * Handles the received CSResponse message from the transceiver.
  */
-void CsmaMac::handleCSReponse(CSRsponse* response){
+void CsmaMac::handleCSReponse(CSResponse* response){
     dbg_enter("handleCSResponse");
     if (!response->busyChannel){
         transmitHOLPacket();
@@ -99,8 +106,37 @@ void CsmaMac::handleCSReponse(CSRsponse* response){
  */
 void CsmaMac::transmitHOLPacket(){
     dbg_enter("transmitPacket");
-    //TODO Transmit Packet Currently on Buffer.
+    MacPacket* macPacket = encapsulateAppMessage(new AppMessage);//Replace with buffer
+    TransmissionRequest* transRequest = encapsulateMacPacket(macPacket);
+    send(transRequest, toTransceiverId);
+    currentState = STATE_TCONF;
     dbg_leave("transmitPacket");
+}
+
+/**
+ * Encapsulates the AppMessage into a MacPacket.
+ */
+MacPacket* CsmaMac::encapsulateAppMessage(AppMessage* message){
+    dbg_enter("encapsulateAppMessage");
+    MacPacket* macPacket = new MacPacket;
+    macPacket->setReceiverAddress(message->getReceiverAddress());
+    macPacket->setTransmitterAddress(ownAddress);
+    macPacket->setMackPacketType(MacDataPacket);
+    macPacket->setByteLength(macOverheadSizeData);
+    macPacket->encapsulate(message);
+    dbg_leave("encapsulateAppMessage");
+    return macPacket;
+}
+
+/**
+ * Encapsulates the MacPacket into a TransmissionRequest.
+ */
+TransmissionRequest* CsmaMac::encapsulateMacPacket(MacPacket* macPacket){
+    dbg_enter("encapsulateMacPacket");
+    TransmissionRequest* transRequest = new TransmissionRequest;
+    transRequest->encapsulate(macPacket);
+    dbg_leave("encapsulateMacPacket");
+    return transRequest;
 }
 
 /**
