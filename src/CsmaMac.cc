@@ -6,6 +6,7 @@
 #include "MacPacket_m.h"
 #include "MacPacketType_m.h"
 #include "TransmissionRequest_m.h"
+#include "TransmissionConfirmation_m.h"
 
 Define_Module(CsmaMac);
 
@@ -30,6 +31,7 @@ void CsmaMac::initialize () {
     fromTransceiverId   = findGate("fromTransceiver");
     toTransceiverId     = findGate("toTransceiver");
     backOffComplete = new cMessage ("BackOffComplete");
+    ackTimeoutMessage = new cMessage ("AckTimeout");
 }
 
 /**
@@ -48,6 +50,7 @@ void CsmaMac::handleMessage(cMessage* msg){
     }
 
     if(msg == backOffComplete && currentState == STATE_BACKOFF){ //Need to check message on buffer
+        dbg_string("Backoff Complete");
         if (currentAttempts < maxAttempts){
             performCarrierSense();
         } else {
@@ -57,6 +60,21 @@ void CsmaMac::handleMessage(cMessage* msg){
             currentAttempts = 0;
             currentBackoffs = 0;
         }
+        dbg_leave("handleMessage");
+        return;
+    }
+
+    if(dynamic_cast<TransmissionConfirmation*>(msg) && arrivalGate == fromTransceiverId && currentState = STATE_TCONF){
+        dbg_string("Transmission Confirmation Received");
+        handleTransmissionConfirmation((TransmissionConfirmation* msg));
+        dbg_leave("handleMessage");
+        return;
+    }
+
+
+    if(msg == ackTimeoutMessage && currentState == STATE_ACK){
+        dbg_string("Ack Timeout Message Received");
+        handleAckTimeout();
         dbg_leave("handleMessage");
         return;
     }
@@ -99,6 +117,30 @@ void CsmaMac::handleCSReponse(CSResponse* response){
     }
     delete CSResponse;
     dbg_leave("handleCSReponse");
+}
+
+/**
+ * Handles Reception of AckTimeout Message
+ */
+void CsmaMac::handAckTimeout(){
+    dbg_enter("handAckTimeout");
+    dbg_string("Entering Failure Backoff");
+    beginBackoff(par("attBackoffDistribution").doubleValue());
+    currentBackoffs = 0;
+    currentAttempts++;
+    dbg_leave("handAckTimeout");
+}
+
+/**
+ * Handles incoming TransmissionConfirmation messages and start the ack timeout.
+ */
+void CsmaMac::handleTransmissionConfirmation(TransmissionConfirmation* confirmation){
+    dbg_enter("HandleTransmissionConfirmation");
+    dbg_string("Starting Ack Timeout");
+    scheduleAt(simTime() + ackTimeout, ackTimeoutMessage);
+    currentState = STATE_ACK;
+    delete confirmation;
+    dbg_leave("HandleTransmissionConfirmation");
 }
 
 /**
@@ -204,4 +246,5 @@ void CsmaMac::dbg_string(std::string str)
  */
 CsmaMac::~CsmaMac(){
     delete backOffComplete;
+    delete ackTimeoutMessage;
 }

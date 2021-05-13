@@ -56,13 +56,15 @@ protected:
   int       fromTransceiverId;
   int       toTransceiverId;
   int       currentState = STATE_IDLE;
-  cMessage* backOffComplete;
+
 
 private:
 
   // your private methods and data members
   int currentBackoffs = 0;
   int currentAttempts = 0;
+  cMessage* backOffComplete;
+  cMessage*ackTimeoutMessage;
   void performCarrierSense();
   void transmitHOLPacket();
   void handleCSResponse(CSResponse* response);
@@ -74,6 +76,8 @@ private:
   void popHOLPacket();
   MacPacket* encapsulateAppMessage(AppMessage* message);
   TransmissionRequest* CsmaMac::encapsulateMacPacket(MacPacket* macPacket);
+  void CsmaMac::handleTransmissionConfirmation(TransmissionConfirmation* confirmation);
+  void handAckTimeout();
 };
 
 
