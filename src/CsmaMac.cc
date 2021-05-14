@@ -29,6 +29,18 @@ void CsmaMac::initialize () {
 }
 
 
+void CsmaMac::dropMacPacket(MacPacket* macPkt){
+
+    appMsg = dynamic_cast<AppMessage *> (macPkt->decapsulate());
+    AppResponse *aResponse = new AppResponse;
+    aResponse->setSequenceNumber = appMsg->getSequenceNumber;
+    aResponse->setOutcome = 2;
+    send(aResponse, toHigherId);
+    delete aResponse;
+
+}
+
+
 void CsmaMac::dropAppMessage(AppMessage* appMsg){
     AppResponse *aResponse = new AppResponse;
     aResponse->setSequenceNumber = appMsg->getSequenceNumber;
