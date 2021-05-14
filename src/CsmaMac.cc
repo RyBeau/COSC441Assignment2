@@ -33,7 +33,11 @@ void CsmaMac::initialize () {
  */
 
 void CsmaMac::dropAppMessage(AppMessage* appMsg){
-
+    AppResponse *aResponse = new AppResponse;
+    aResponse->setSequenceNumber = appMsg->getSequenceNumber;
+    aResponse->setOutcome = 1;
+    send(aResponse, toHigherId);
+    delete aResponse;
 }
 
 void CsmaMac::receiveAppMessage(AppMessage* appMsg){
