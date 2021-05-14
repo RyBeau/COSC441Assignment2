@@ -37,7 +37,15 @@ void CsmaMac::dropAppMessage(AppMessage* appMsg){
 }
 
 void CsmaMac::receiveAppMessage(AppMessage* appMsg){
+    if (buffer.size() < bufferSize) {
+        buffer.push(appMsg);
+    } else {
+        dropPacket(appMsg);
+    }
 
+    if (MacState == State_IDLE) {
+        checkBuffer();
+    }
 
 }
 
