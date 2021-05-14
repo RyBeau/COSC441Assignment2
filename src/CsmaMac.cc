@@ -33,6 +33,7 @@ void CsmaMac::initialize () {
  * Should be called if maximum backoffs for carrier sensing or maximum transmissions have been reached.
  */
 void CsmaMac::dropMacPacket(MacPacket* macPkt){
+    dbg_enter("dropMacPacket");
 
     appMsg = dynamic_cast<AppMessage *> (macPkt->decapsulate());
     AppResponse *aResponse = new AppResponse;
@@ -41,23 +42,29 @@ void CsmaMac::dropMacPacket(MacPacket* macPkt){
     send(aResponse, toHigherId);
     delete aResponse; //Should we also delete the MacPkt here?
 
+    dbg_leave("dropMacPacket");
 }
 
 /**
  * Handles AppMessages that are to be dropped due to a full buffer.
  */
 void CsmaMac::dropAppMessage(AppMessage* appMsg){
+    dbg_enter("dropAppMessage");
+
     AppResponse *aResponse = new AppResponse;
     aResponse->setSequenceNumber = appMsg->getSequenceNumber;
     aResponse->setOutcome = 1;
     send(aResponse, toHigherId);
     delete aResponse;
+
+    dbg_leave("dropAppMessage");
 }
 
 /**
  * Handles AppMessages that are received from the higher level.
  */
 void CsmaMac::receiveAppMessage(cMessage* appMsg){
+    dbg_enter("receiveAppMessage");
     int arrivalGate = msg->getArrivalGateId();
 
     if (dynamic_cast<AppMessage*>(msg) && arrivalGate == fromHigherId){
@@ -70,16 +77,18 @@ void CsmaMac::receiveAppMessage(cMessage* appMsg){
         if (MacState == State_IDLE) {
             checkBuffer();
         }
+
+        dbg_leave("receiveAppMessage");
     } else {
         error("CsmaMac::receiveAppMessage: unexpected AppMessage");
     }
-
 }
 
 /**
  * Checks buffer for messages to transmit.
  */
 void CsmaMac::checkBuffer(){
+    dbg_enter("checkBuffer");
 
     if (buffer.empty()) {
         MacState = STATE_IDLE;
@@ -87,6 +96,8 @@ void CsmaMac::checkBuffer(){
         MacState = STATE_CS;
         handleMessage(buffer.pop());
     }
+
+    dbg_leave("checkBuffer");
 }
 
 
