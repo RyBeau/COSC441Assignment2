@@ -28,9 +28,6 @@ void CsmaMac::initialize () {
     queue<int> buffer;
 }
 
-/**
- * Handles incoming messages on the gates.
- */
 
 void CsmaMac::dropAppMessage(AppMessage* appMsg){
     AppResponse *aResponse = new AppResponse;
@@ -64,6 +61,10 @@ void CsmaMac::checkBuffer(){
 
 }
 
+
+/**
+ * Handles incoming messages on the gates.
+ */
 void CsmaMac::handleMessage(cMessage* msg){
     dbg_string("----------------------------------------------");
     dbg_enter("handleMessage");
