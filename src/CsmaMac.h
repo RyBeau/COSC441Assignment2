@@ -62,7 +62,7 @@ private:
   int currentAttempts = 0;
   void dropMacPacket(MacPacket* macPkt);
   void dropAppMessage(AppMessage* appMsg);
-  void receiveAppMessage(AppMessage* appMsg);
+  void receiveAppMessage(cMessage* appMsg);
   void checkBuffer();
   void performCarrierSense();
   void transmitHOLPacket();

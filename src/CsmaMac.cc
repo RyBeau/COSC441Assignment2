@@ -57,15 +57,21 @@ void CsmaMac::dropAppMessage(AppMessage* appMsg){
 /**
  * Handles AppMessages that are received from the higher level.
  */
-void CsmaMac::receiveAppMessage(AppMessage* appMsg){
-    if (buffer.size() < bufferSize) {
-        buffer.push(appMsg);
-    } else {
-        dropPacket(appMsg);
-    }
+void CsmaMac::receiveAppMessage(cMessage* appMsg){
+    int arrivalGate = msg->getArrivalGateId();
 
-    if (MacState == State_IDLE) {
-        checkBuffer();
+    if (dynamic_cast<AppMessage*>(msg) && arrivalGate == fromHigherId){
+        if (buffer.size() < bufferSize) {
+            buffer.push(appMsg);
+        } else {
+            dropPacket(appMsg);
+        }
+
+        if (MacState == State_IDLE) {
+            checkBuffer();
+        }
+    } else {
+        error("CsmaMac::receiveAppMessage: unexpected AppMessage");
     }
 
 }
