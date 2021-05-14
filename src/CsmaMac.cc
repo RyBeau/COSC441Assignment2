@@ -28,7 +28,10 @@ void CsmaMac::initialize () {
     queue<int> buffer;
 }
 
-
+/**
+ * Handles dropping packets that have not been succesfully sent due to channel errors.
+ * Should be called if maximum backoffs for carrier sensing or maximum transmissions have been reached.
+ */
 void CsmaMac::dropMacPacket(MacPacket* macPkt){
 
     appMsg = dynamic_cast<AppMessage *> (macPkt->decapsulate());
@@ -36,11 +39,13 @@ void CsmaMac::dropMacPacket(MacPacket* macPkt){
     aResponse->setSequenceNumber = appMsg->getSequenceNumber;
     aResponse->setOutcome = 2;
     send(aResponse, toHigherId);
-    delete aResponse;
+    delete aResponse; //Should we also delete the MacPkt here?
 
 }
 
-
+/**
+ * Handles AppMessages that are to be dropped due to a full buffer.
+ */
 void CsmaMac::dropAppMessage(AppMessage* appMsg){
     AppResponse *aResponse = new AppResponse;
     aResponse->setSequenceNumber = appMsg->getSequenceNumber;
@@ -49,6 +54,9 @@ void CsmaMac::dropAppMessage(AppMessage* appMsg){
     delete aResponse;
 }
 
+/**
+ * Handles AppMessages that are received from the higher level.
+ */
 void CsmaMac::receiveAppMessage(AppMessage* appMsg){
     if (buffer.size() < bufferSize) {
         buffer.push(appMsg);
@@ -62,6 +70,9 @@ void CsmaMac::receiveAppMessage(AppMessage* appMsg){
 
 }
 
+/**
+ * Checks buffer for messages to transmit.
+ */
 void CsmaMac::checkBuffer(){
 
     if (buffer.empty()) {
@@ -70,7 +81,6 @@ void CsmaMac::checkBuffer(){
         MacState = STATE_CS;
         handleMessage(buffer.pop());
     }
-
 }
 
 
