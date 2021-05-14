@@ -7,6 +7,7 @@
 #define CSMAMAC_H_
 
 #include <omnetpp.h>
+#include <queue>
 // further includes ...
 
 
@@ -59,6 +60,9 @@ private:
   // your private methods and data members
   int currentBackoffs = 0;
   int currentAttempts = 0;
+  void dropAppMessage(AppMessage* appMsg);
+  void receiveAppMessage(AppMessage* appMsg);
+  void checkBuffer();
   void performCarrierSense();
   void transmitHOLPacket();
   void handleCSResponse(CSResponse* response);

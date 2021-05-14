@@ -1,5 +1,6 @@
 //TODO implement what is outlined in the ned and .h file
 #include "CsmaMac.h"
+#include <queue>
 
 Define_Module(CsmaMac);
 
@@ -24,11 +25,33 @@ void CsmaMac::initialize () {
     fromTransceiverId   = findGate("fromTransceiver");
     toTransceiverId     = findGate("toTransceiver");
     backOffComplete = new cMessage ("BackOffComplete");
+    queue<int> buffer;
 }
 
 /**
  * Handles incoming messages on the gates.
  */
+
+void CsmaMac::dropAppMessage(AppMessage* appMsg){
+
+}
+
+void CsmaMac::receiveAppMessage(AppMessage* appMsg){
+
+
+}
+
+void CsmaMac::checkBuffer(){
+
+    if (buffer.empty()) {
+        MacState = STATE_IDLE;
+    } else {
+        MacState = STATE_CS;
+        handleMessage(buffer.pop());
+    }
+
+}
+
 void CsmaMac::handleMessage(cMessage* msg){
     dbg_string("----------------------------------------------");
     dbg_enter("handleMessage");
@@ -73,7 +96,7 @@ void CsmaMac::performCarrierSense(){
 /**
  * Handles the received CSResponse message from the transceiver.
  */
-void CsmaMac::handleCSReponse(CSRsponse* response){
+void CsmaMac::handleCSReponse(CSResponse* response){
     dbg_enter("handleCSResponse");
     if (!response->busyChannel){
         transmitHOLPacket();
