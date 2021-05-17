@@ -191,7 +191,7 @@ void CsmaMac::beginBackoff(double backOffTime){
 }
 
 void CsmaMac::PopHOLPacket(){
-    //TODO Pop from buffer
+    buffer.pop();
 }
 
 // ===================================================================================
