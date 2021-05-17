@@ -30,7 +30,7 @@ void CsmaMac::initialize () {
 
 /**
  * Handles dropping packets that have not been succesfully sent due to channel errors.
- * Should be called if maximum backoffs for carrier sensing or maximum transmissions have been reached.
+ * Should be called if maximum transmissions have been reached.
  */
 void CsmaMac::dropMacPacket(MacPacket* macPkt){
     dbg_enter("dropMacPacket");
@@ -44,6 +44,22 @@ void CsmaMac::dropMacPacket(MacPacket* macPkt){
     delete aResponse; //Should we also delete the MacPkt here?
 
     dbg_leave("dropMacPacket");
+}
+
+/**
+ * Handles dropping packets that have not been successfully sent due to the maximum carrier sense backoff attempts occuring.
+ * Should be called if transmission has not even been attempted as the channel was always busy.
+ */
+void CsmaMac::dropPacketCS(void){
+    dbg_enter("dropPacketCS");
+    AppMessage* appMsg = buffer.front();
+    AppResponse *aResponse = new AppResponse;
+    aResponse->setSequenceNumber = appMsg->getSequenceNumber;
+    aResponse->setOutcome = 2;
+    send(aResponse, toHigherId);
+    delete aResponse;
+    PopHOLPacket();
+    dbg_leave("dropPacketCS");
 }
 
 /**
