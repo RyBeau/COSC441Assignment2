@@ -74,7 +74,7 @@ void CsmaMac::receiveAppMessage(cMessage* appMsg){
             dropPacket(appMsg);
         }
 
-        if (MacState == State_IDLE) {
+        if (currentState == State_IDLE) {
             checkBuffer();
         }
 
@@ -91,10 +91,11 @@ void CsmaMac::checkBuffer(){
     dbg_enter("checkBuffer");
 
     if (buffer.empty()) {
-        MacState = STATE_IDLE;
+        currentState = STATE_IDLE;
     } else {
-        MacState = STATE_CS;
-        handleMessage(buffer.pop());
+        currentState = STATE_CS;
+        AppMessage* appMsg = buffer.front();
+        performCarrierSense(appMsg);
     }
 
     dbg_leave("checkBuffer");
