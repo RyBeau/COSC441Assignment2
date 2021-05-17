@@ -35,6 +35,7 @@ void CsmaMac::initialize () {
 void CsmaMac::dropMacPacket(MacPacket* macPkt){
     dbg_enter("dropMacPacket");
 
+    PopHOLPacket();
     appMsg = dynamic_cast<AppMessage *> (macPkt->decapsulate());
     AppResponse *aResponse = new AppResponse;
     aResponse->setSequenceNumber = appMsg->getSequenceNumber;
