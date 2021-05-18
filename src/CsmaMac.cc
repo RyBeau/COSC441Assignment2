@@ -73,7 +73,8 @@ void CsmaMac::handleMessage(cMessage* msg){
  */
 void CsmaMac::dropPacketChannelFail(void){
     dbg_enter("dropPacketCS");
-    AppMessage* appMsg = buffer.pop();
+    AppMessage* appMsg = buffer.front();
+    buffer.pop();
     AppResponse* aResponse = new AppResponse;
     aResponse->setSequenceNumber(appMsg->getSequenceNumber());
     aResponse->setOutcome(2);
