@@ -54,13 +54,12 @@ void CsmaMac::dropMacPacket(MacPacket* macPkt){
  */
 void CsmaMac::dropPacketCS(void){
     dbg_enter("dropPacketCS");
-    AppMessage* appMsg = buffer.front();
+    AppMessage* appMsg = buffer.pop();
     AppResponse *aResponse = new AppResponse;
-    aResponse->setSequenceNumber = appMsg->getSequenceNumber;
-    aResponse->setOutcome = 2;
+    aResponse->setSequenceNumber(appMsg->getSequenceNumber());
+    aResponse->setOutcome(2);
     send(aResponse, toHigherId);
-    delete aResponse;
-    PopHOLPacket();
+    delete appMsg;
     dbg_leave("dropPacketCS");
 }
 
@@ -121,6 +120,7 @@ void CsmaMac::handleMessage(cMessage* msg){
 
     if (dynamic_cast<AppMessage*>(msg) && arrivalGate == fromHigherId){
            receiveAppMessage((AppMessage) msg);
+           return;
     }
 
     if (dynamic_cast<CSResponse*>(msg) && arrivalGate == fromTransceiverId && currentState = STATE_CS){
