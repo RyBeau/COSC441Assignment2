@@ -25,7 +25,7 @@ void CsmaMac::initialize () {
     fromTransceiverId   = findGate("fromTransceiver");
     toTransceiverId     = findGate("toTransceiver");
     backOffComplete = new cMessage ("BackOffComplete");
-    queue<int> buffer;
+    queue<AppMessage> buffer;
 }
 
 /**
