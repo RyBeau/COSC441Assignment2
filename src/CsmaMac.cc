@@ -1,6 +1,8 @@
 //TODO implement what is outlined in the ned and .h file
 #include "CsmaMac.h"
 #include <queue>
+#include "AppMessage_m.h"
+#include "AppResponse_m.h"
 
 Define_Module(CsmaMac);
 
@@ -68,11 +70,11 @@ void CsmaMac::dropPacketCS(void){
 void CsmaMac::dropAppMessage(AppMessage* appMsg){
     dbg_enter("dropAppMessage");
 
-    AppResponse *aResponse = new AppResponse;
-    aResponse->setSequenceNumber = appMsg->getSequenceNumber;
-    aResponse->setOutcome = 1;
+    AppResponse* aResponse = new AppResponse;
+    aResponse->setSequenceNumber(appMsg->getSequenceNumber());
+    aResponse->setOutcome(1);
     send(aResponse, toHigherId);
-    delete aResponse;
+    delete appMsg;
 
     dbg_leave("dropAppMessage");
 }
@@ -85,7 +87,7 @@ void CsmaMac::receiveAppMessage(AppMessage* appMsg){
     if (buffer.size() < bufferSize) {
         buffer.push(appMsg);
     } else {
-        dropPacket(appMsg);
+        dropAppMessage(appMsg);
     }
     if (currentState == State_IDLE) {
         checkBuffer();
