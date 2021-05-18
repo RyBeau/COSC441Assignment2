@@ -80,25 +80,17 @@ void CsmaMac::dropAppMessage(AppMessage* appMsg){
 /**
  * Handles AppMessages that are received from the higher level.
  */
-void CsmaMac::receiveAppMessage(cMessage* appMsg){
+void CsmaMac::receiveAppMessage(AppMessage* appMsg){
     dbg_enter("receiveAppMessage");
-    int arrivalGate = msg->getArrivalGateId();
-
-    if (dynamic_cast<AppMessage*>(msg) && arrivalGate == fromHigherId){
-        if (buffer.size() < bufferSize) {
-            buffer.push(appMsg);
-        } else {
-            dropPacket(appMsg);
-        }
-
-        if (currentState == State_IDLE) {
-            checkBuffer();
-        }
-
-        dbg_leave("receiveAppMessage");
+    if (buffer.size() < bufferSize) {
+        buffer.push(appMsg);
     } else {
-        error("CsmaMac::receiveAppMessage: unexpected AppMessage");
+        dropPacket(appMsg);
     }
+    if (currentState == State_IDLE) {
+        checkBuffer();
+    }
+    dbg_leave("receiveAppMessage");
 }
 
 /**
@@ -124,6 +116,10 @@ void CsmaMac::handleMessage(cMessage* msg){
     dbg_string("----------------------------------------------");
     dbg_enter("handleMessage");
     int arrivalGate = msg->getArrivalGateId();
+
+    if (dynamic_cast<AppMessage*>(msg) && arrivalGate == fromHigherId){
+           receiveAppMessage((AppMessage) msg);
+    }
 
     if (dynamic_cast<CSResponse*>(msg) && arrivalGate == fromTransceiverId && currentState = STATE_CS){
         dbg_string("Received CSReponse Message");
