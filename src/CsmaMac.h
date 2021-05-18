@@ -60,8 +60,7 @@ private:
   // your private methods and data members
   int currentBackoffs = 0;
   int currentAttempts = 0;
-  void dropPacketCS();
-  void dropMacPacket(MacPacket* macPkt);
+  void dropPacketChannelFail();
   void dropAppMessage(AppMessage* appMsg);
   void receiveAppMessage(cMessage* appMsg);
   void checkBuffer();
