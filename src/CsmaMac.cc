@@ -55,7 +55,7 @@ void CsmaMac::handleMessage(cMessage* msg){
             performCarrierSense();
         } else {
             dbg_string("Max Attempts Reached");
-            dropPacketCS();
+            dropPacketChannelFail();
             currentState = STATE_IDLE;
             currentAttempts = 0;
             currentBackoffs = 0;
@@ -68,26 +68,10 @@ void CsmaMac::handleMessage(cMessage* msg){
 }
 
 /**
- * Handles dropping packets that have not been successfully sent due to channel errors.
- * Should be called if maximum transmissions have been reached.
- */
-void CsmaMac::dropMacPacket(MacPacket* macPkt){
-    dbg_enter("dropMacPacket");
-    appMsg = buffer.pop();
-    AppResponse* aResponse = new AppResponse;
-    aResponse->setSequenceNumber(appMsg->getSequenceNumber());
-    aResponse->setOutcome(2);
-    send(aResponse, toHigherId);
-    delete appMsg;
-    delete macPkt;
-    dbg_leave("dropMacPacket");
-}
-
-/**
  * Handles dropping packets that have not been successfully sent due to the maximum carrier sense backoff attempts occurring.
  * Should be called if transmission has not even been attempted as the channel was always busy.
  */
-void CsmaMac::dropPacketCS(void){
+void CsmaMac::dropPacketChannelFail(void){
     dbg_enter("dropPacketCS");
     AppMessage* appMsg = buffer.pop();
     AppResponse* aResponse = new AppResponse;
