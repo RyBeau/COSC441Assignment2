@@ -25,7 +25,7 @@ void CsmaMac::initialize () {
     fromTransceiverId   = findGate("fromTransceiver");
     toTransceiverId     = findGate("toTransceiver");
     backOffComplete = new cMessage ("BackOffComplete");
-    queue<AppMessage> buffer;
+    queue<AppMessage*> buffer;
 }
 
 /**
@@ -110,9 +110,7 @@ void CsmaMac::checkBuffer(){
     if (buffer.empty()) {
         currentState = STATE_IDLE;
     } else {
-        currentState = STATE_CS;
-        AppMessage* appMsg = buffer.front();
-        performCarrierSense(appMsg);
+        performCarrierSense();
     }
 
     dbg_leave("checkBuffer");
