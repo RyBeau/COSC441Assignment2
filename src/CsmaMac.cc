@@ -31,6 +31,43 @@ void CsmaMac::initialize () {
 }
 
 /**
+ * Handles incoming messages on the gates.
+ */
+void CsmaMac::handleMessage(cMessage* msg){
+    dbg_string("----------------------------------------------");
+    dbg_enter("handleMessage");
+    int arrivalGate = msg->getArrivalGateId();
+
+    if (dynamic_cast<AppMessage*>(msg) && arrivalGate == fromHigherId){
+           receiveAppMessage((AppMessage) msg);
+           return;
+    }
+
+    if (dynamic_cast<CSResponse*>(msg) && arrivalGate == fromTransceiverId && currentState = STATE_CS){
+        dbg_string("Received CSReponse Message");
+        handleCSResponse((CSResponse) msg);
+        dbg_leave("handleMessage");
+        return;
+    }
+
+    if(msg == backOffComplete && currentState == STATE_BACKOFF){ //Need to check message on buffer
+        if (currentAttempts < maxAttempts){
+            performCarrierSense();
+        } else {
+            dbg_string("Max Attempts Reached");
+            dropPacketCS();
+            currentState = STATE_IDLE;
+            currentAttempts = 0;
+            currentBackoffs = 0;
+        }
+        dbg_leave("handleMessage");
+        return;
+    }
+    delete msg;
+    error("CsmaMac::handleMessage: unexpected message");
+}
+
+/**
  * Handles dropping packets that have not been successfully sent due to channel errors.
  * Should be called if maximum transmissions have been reached.
  */
@@ -105,44 +142,6 @@ void CsmaMac::checkBuffer(){
     }
 
     dbg_leave("checkBuffer");
-}
-
-
-/**
- * Handles incoming messages on the gates.
- */
-void CsmaMac::handleMessage(cMessage* msg){
-    dbg_string("----------------------------------------------");
-    dbg_enter("handleMessage");
-    int arrivalGate = msg->getArrivalGateId();
-
-    if (dynamic_cast<AppMessage*>(msg) && arrivalGate == fromHigherId){
-           receiveAppMessage((AppMessage) msg);
-           return;
-    }
-
-    if (dynamic_cast<CSResponse*>(msg) && arrivalGate == fromTransceiverId && currentState = STATE_CS){
-        dbg_string("Received CSReponse Message");
-        handleCSResponse((CSResponse) msg);
-        dbg_leave("handleMessage");
-        return;
-    }
-
-    if(msg == backOffComplete && currentState == STATE_BACKOFF){ //Need to check message on buffer
-        if (currentAttempts < maxAttempts){
-            performCarrierSense();
-        } else {
-            dbg_string("Max Attempts Reached");
-            dropPacketCS();
-            currentState = STATE_IDLE;
-            currentAttempts = 0;
-            currentBackoffs = 0;
-        }
-        dbg_leave("handleMessage");
-        return;
-    }
-    delete msg;
-    error("CsmaMac::handleMessage: unexpected message");
 }
 
 /**
