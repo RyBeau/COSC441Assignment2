@@ -167,9 +167,9 @@ void CsmaMac::checkBuffer(){
         } else {
             dbg_string("Max Attempts Reached");
             dropPacketChannelFail();
-            currentState = STATE_IDLE;
             currentAttempts = 0;
             currentBackoffs = 0;
+            checkBuffer();
         }
     }
 
@@ -251,6 +251,7 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
     } else {
         error("CsmaMac::handleTransmissionIndication: Message with wrong address");
     }
+    delete macPacket;
     delete indication;
     dbg_leave("handleTransmissionIndication");
 }
@@ -261,7 +262,6 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
 void CsmaMac::handleAck(MacPacket* macPacket){
     dbg_enter("handleAck");
     if (currentState == STATE_ACK && and macPacket->getTransmitterAddress() == buffer.front()->getReceiverAddress()){
-        delete macPacket;
         cancelEvent(ackTimeout);
         currentAttempts = 0;
         currentBackoffs = 0;
@@ -269,10 +269,8 @@ void CsmaMac::handleAck(MacPacket* macPacket){
         beginBackoff(par("succBackoffDistribution").doubleValue());
     } else if (macPacket->getTransmitterAddress() != buffer.front()->getReceiverAddress()){
         dbg_string("Ack received not for HOL packet.");
-        delete macPacket;
     } else{
         dbg_string("Ack received after timeout.");
-        delete macPacket;
     }
     dbg_leave("handleAck");
 }
