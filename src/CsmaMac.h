@@ -7,8 +7,14 @@
 #define CSMAMAC_H_
 
 #include <omnetpp.h>
+#include "AppMessage_m.h"
+#include "AppResponse_m.h"
+#include "CSRequest_m.h"
+#include "CSResponse_m.h"
+#include "MacPacket_m.h"
+#include "MacPacketType_m.h"
+#include "TransmissionRequest_m.h"
 #include <queue>
-// further includes ...
 
 
 using namespace omnetpp;
@@ -53,13 +59,15 @@ protected:
   int       fromTransceiverId;
   int       toTransceiverId;
   int       currentState = STATE_IDLE;
-  cMessage* backOffComplete;
+
 
 private:
 
   // your private methods and data members
   int currentBackoffs = 0;
   int currentAttempts = 0;
+  cMessage* backOffComplete;
+  cMessage*ackTimeoutMessage;
   void dropPacketChannelFail();
   void dropAppMessage(AppMessage* appMsg);
   void receiveAppMessage(cMessage* appMsg);
@@ -69,10 +77,17 @@ private:
   void handleCSResponse(CSResponse* response);
   void beginBackoff(double backOffTime);
   void dbg_prefix();
+  void handleAckTimeout();
   void dbg_enter (std::string methname);
   void dbg_leave (std::string methname);
   void dbg_string(std::string str);
-  void popHOLPacket();
+  MacPacket* encapsulateAppMessage(AppMessage* message);
+  TransmissionRequest* CsmaMac::encapsulateMacPacket(MacPacket* macPacket);
+  void handleTransmissionConfirmation(TransmissionConfirmation* confirmation);
+  void handleTransmissionIndication(TransmissionIndication* indication);
+  void handleAck(MacPacket* macPacket);
+  void handleAckTimeout();
+  void dropPacketSuccess();
 };
 
 
