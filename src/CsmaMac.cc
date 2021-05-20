@@ -219,7 +219,7 @@ void CsmaMac::handleTransmissionConfirmation(TransmissionConfirmation* confirmat
  */
 void CsmaMac::transmitHOLPacket(){
     dbg_enter("transmitPacket");
-    MacPacket* macPacket = encapsulateAppMessage(new AppMessage);//Replace with buffer
+    MacPacket* macPacket = encapsulateAppMessage(buffer.front());
     TransmissionRequest* transRequest = encapsulateMacPacket(macPacket);
     send(transRequest, toTransceiverId);
     currentState = STATE_TCONF;
@@ -261,12 +261,6 @@ void CsmaMac::beginBackoff(double backOffTime){
     scheduleAt(simTime() + backOffTime, backOffComplete);
     currentState = STATE_BACKOFF;
     dbg_leave("beginBackoff");
-}
-
-void CsmaMac::PopHOLPacket(){
-    dbg_enter("PopHOLPacket");
-    buffer.pop();
-    dbg_leave("PopHOLPacket");
 }
 
 // ===================================================================================

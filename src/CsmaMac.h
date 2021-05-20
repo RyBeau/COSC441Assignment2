@@ -80,7 +80,6 @@ private:
   void dbg_enter (std::string methname);
   void dbg_leave (std::string methname);
   void dbg_string(std::string str);
-  void popHOLPacket();
   MacPacket* encapsulateAppMessage(AppMessage* message);
   TransmissionRequest* CsmaMac::encapsulateMacPacket(MacPacket* macPacket);
   void CsmaMac::handleTransmissionConfirmation(TransmissionConfirmation* confirmation);
