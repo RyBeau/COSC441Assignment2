@@ -1,5 +1,8 @@
 //TODO implement what is outlined in the ned and .h file
 #include "CsmaMac.h"
+#include <queue>
+#include "AppMessage_m.h"
+#include "AppResponse_m.h"
 
 Define_Module(CsmaMac);
 
@@ -24,6 +27,7 @@ void CsmaMac::initialize () {
     fromTransceiverId   = findGate("fromTransceiver");
     toTransceiverId     = findGate("toTransceiver");
     backOffComplete = new cMessage ("BackOffComplete");
+    queue<AppMessage*> buffer;
 }
 
 /**
@@ -33,6 +37,11 @@ void CsmaMac::handleMessage(cMessage* msg){
     dbg_string("----------------------------------------------");
     dbg_enter("handleMessage");
     int arrivalGate = msg->getArrivalGateId();
+
+    if (dynamic_cast<AppMessage*>(msg) && arrivalGate == fromHigherId){
+           receiveAppMessage((AppMessage) msg);
+           return;
+    }
 
     if (dynamic_cast<CSResponse*>(msg) && arrivalGate == fromTransceiverId && currentState = STATE_CS){
         dbg_string("Received CSReponse Message");
@@ -46,7 +55,7 @@ void CsmaMac::handleMessage(cMessage* msg){
             performCarrierSense();
         } else {
             dbg_string("Max Attempts Reached");
-            popHOLPacket();
+            dropPacketChannelFail();
             currentState = STATE_IDLE;
             currentAttempts = 0;
             currentBackoffs = 0;
@@ -56,6 +65,68 @@ void CsmaMac::handleMessage(cMessage* msg){
     }
     delete msg;
     error("CsmaMac::handleMessage: unexpected message");
+}
+
+/**
+ * Handles dropping packets that have not been successfully sent due to the maximum carrier sense backoff attempts occurring.
+ * Should be called if transmission has not even been attempted as the channel was always busy.
+ */
+void CsmaMac::dropPacketChannelFail(void){
+    dbg_enter("dropPacketCS");
+    AppMessage* appMsg = buffer.front();
+    buffer.pop();
+    AppResponse* aResponse = new AppResponse;
+    aResponse->setSequenceNumber(appMsg->getSequenceNumber());
+    aResponse->setOutcome(2);
+    send(aResponse, toHigherId);
+    delete appMsg;
+    dbg_leave("dropPacketCS");
+}
+
+/**
+ * Handles AppMessages that are to be dropped due to a full buffer.
+ */
+void CsmaMac::dropAppMessage(AppMessage* appMsg){
+    dbg_enter("dropAppMessage");
+
+    AppResponse* aResponse = new AppResponse;
+    aResponse->setSequenceNumber(appMsg->getSequenceNumber());
+    aResponse->setOutcome(1);
+    send(aResponse, toHigherId);
+    delete appMsg;
+
+    dbg_leave("dropAppMessage");
+}
+
+/**
+ * Handles AppMessages that are received from the higher level.
+ */
+void CsmaMac::receiveAppMessage(AppMessage* appMsg){
+    dbg_enter("receiveAppMessage");
+    if (buffer.size() < bufferSize) {
+        buffer.push(appMsg);
+    } else {
+        dropAppMessage(appMsg);
+    }
+    if (currentState == State_IDLE) {
+        checkBuffer();
+    }
+    dbg_leave("receiveAppMessage");
+}
+
+/**
+ * Checks buffer for messages to transmit.
+ */
+void CsmaMac::checkBuffer(){
+    dbg_enter("checkBuffer");
+
+    if (buffer.empty()) {
+        currentState = STATE_IDLE;
+    } else {
+        performCarrierSense();
+    }
+
+    dbg_leave("checkBuffer");
 }
 
 /**
@@ -73,7 +144,7 @@ void CsmaMac::performCarrierSense(){
 /**
  * Handles the received CSResponse message from the transceiver.
  */
-void CsmaMac::handleCSReponse(CSRsponse* response){
+void CsmaMac::handleCSReponse(CSResponse* response){
     dbg_enter("handleCSResponse");
     if (!response->busyChannel){
         transmitHOLPacket();
@@ -115,7 +186,9 @@ void CsmaMac::beginBackoff(double backOffTime){
 }
 
 void CsmaMac::PopHOLPacket(){
-    //TODO Pop from buffer
+    dbg_enter("PopHOLPacket");
+    buffer.pop();
+    dbg_leave("PopHOLPacket");
 }
 
 // ===================================================================================
