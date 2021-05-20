@@ -8,6 +8,7 @@
 #include "MacPacketType_m.h"
 #include "TransmissionRequest_m.h"
 #include "TransmissionConfirmation_m.h"
+#include "TransmissionIndication_m.h"
 #include <queue>
 
 
@@ -60,15 +61,7 @@ void CsmaMac::handleMessage(cMessage* msg){
 
     if(msg == backOffComplete && currentState == STATE_BACKOFF){ //Need to check message on buffer
         dbg_string("Backoff Complete");
-        if (currentAttempts < maxAttempts){
-            performCarrierSense();
-        } else {
-            dbg_string("Max Attempts Reached");
-            dropPacketChannelFail();
-            currentState = STATE_IDLE;
-            currentAttempts = 0;
-            currentBackoffs = 0;
-        }
+        checkBuffer();
         dbg_leave("handleMessage");
         return;
     }
@@ -76,6 +69,13 @@ void CsmaMac::handleMessage(cMessage* msg){
     if(dynamic_cast<TransmissionConfirmation*>(msg) && arrivalGate == fromTransceiverId && currentState = STATE_TCONF){
         dbg_string("Transmission Confirmation Received");
         handleTransmissionConfirmation((TransmissionConfirmation* msg));
+        dbg_leave("handleMessage");
+        return;
+    }
+
+    if(dynamic_cast<TransmissionIndication*>(msg) && arrivalGate == fromTransceiverId){
+        dbg_string("Transmission Indication Received");
+        handleTransmissionIndication((TransmissionIndication) msg);
         dbg_leave("handleMessage");
         return;
     }
@@ -106,6 +106,21 @@ void CsmaMac::dropPacketChannelFail(void){
     send(aResponse, toHigherId);
     delete appMsg;
     dbg_leave("dropPacketCS");
+}
+
+/**
+ * Drops packet in successful reception of packet by receiver.
+ */
+void CsmaMac::dropPacketSuccess(void){
+    dbg_enter("dropPacketSuccess");
+    AppMessage* appMsg = buffer.front();
+    buffer.pop();
+    AppResponse* aResponse = new AppResponse;
+    aResponse->setSequenceNumber(appMsg->getSequenceNumber());
+    aResponse->setOutcome(Success);
+    send(aResponse, toHigherId);
+    delete appMsg;
+    dbg_leave("dropPacketSuccess");
 }
 
 /**
@@ -144,11 +159,18 @@ void CsmaMac::receiveAppMessage(AppMessage* appMsg){
  */
 void CsmaMac::checkBuffer(){
     dbg_enter("checkBuffer");
-
     if (buffer.empty()) {
         currentState = STATE_IDLE;
     } else {
-        performCarrierSense();
+        if (currentAttempts < maxAttempts){
+            performCarrierSense();
+        } else {
+            dbg_string("Max Attempts Reached");
+            dropPacketChannelFail();
+            currentState = STATE_IDLE;
+            currentAttempts = 0;
+            currentBackoffs = 0;
+        }
     }
 
     dbg_leave("checkBuffer");
@@ -171,7 +193,7 @@ void CsmaMac::performCarrierSense(){
  */
 void CsmaMac::handleCSReponse(CSResponse* response){
     dbg_enter("handleCSResponse");
-    if (!response->busyChannel){
+    if (!response->getBusyChannel()){
         transmitHOLPacket();
     } else {
         if (currentBackoffs < maxBackoffs){
@@ -193,7 +215,7 @@ void CsmaMac::handleCSReponse(CSResponse* response){
 /**
  * Handles Reception of AckTimeout Message
  */
-void CsmaMac::handAckTimeout(){
+void CsmaMac::handleAckTimeout(){
     dbg_enter("handAckTimeout");
     dbg_string("Entering Failure Backoff");
     beginBackoff(par("attBackoffDistribution").doubleValue());
@@ -212,6 +234,47 @@ void CsmaMac::handleTransmissionConfirmation(TransmissionConfirmation* confirmat
     currentState = STATE_ACK;
     delete confirmation;
     dbg_leave("HandleTransmissionConfirmation");
+}
+
+/**
+ * Handles incoming TransmissionIndication messages
+ */
+void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
+    dbg_enter("handleTransmissionIndication");
+    MacPacket* macPacket = indication->decapsulate();
+    if (macPacket->getReceiverAddress() == ownAddress){
+        if (macPacket->getMacPacketType() == MacAckPacket){
+            handleAck(macPacket);
+        } else {
+            //TODO Handle Reception
+        }
+    } else {
+        error("CsmaMac::handleTransmissionIndication: Message with wrong address");
+    }
+    delete indication;
+    dbg_leave("handleTransmissionIndication");
+}
+
+/**
+ * Handles incoming acks.
+ */
+void CsmaMac::handleAck(MacPacket* macPacket){
+    dbg_enter("handleAck");
+    if (currentState == STATE_ACK && and macPacket->getTransmitterAddress() == buffer.front()->getReceiverAddress()){
+        delete macPacket;
+        cancelEvent(ackTimeout);
+        currentAttempts = 0;
+        currentBackoffs = 0;
+        dropPacketSuccess();
+        beginBackoff(par("succBackoffDistribution").doubleValue());
+    } else if (macPacket->getTransmitterAddress() != buffer.front()->getReceiverAddress()){
+        dbg_string("Ack received not for HOL packet.");
+        delete macPacket;
+    } else{
+        dbg_string("Ack received after timeout.");
+        delete macPacket;
+    }
+    dbg_leave("handleAck");
 }
 
 /**

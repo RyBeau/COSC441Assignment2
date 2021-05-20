@@ -77,13 +77,17 @@ private:
   void handleCSResponse(CSResponse* response);
   void beginBackoff(double backOffTime);
   void dbg_prefix();
+  void handleAckTimeout();
   void dbg_enter (std::string methname);
   void dbg_leave (std::string methname);
   void dbg_string(std::string str);
   MacPacket* encapsulateAppMessage(AppMessage* message);
   TransmissionRequest* CsmaMac::encapsulateMacPacket(MacPacket* macPacket);
-  void CsmaMac::handleTransmissionConfirmation(TransmissionConfirmation* confirmation);
-  void handAckTimeout();
+  void handleTransmissionConfirmation(TransmissionConfirmation* confirmation);
+  void handleTransmissionIndication(TransmissionIndication* indication);
+  void handleAck(MacPacket* macPacket);
+  void handleAckTimeout();
+  void dropPacketSuccess();
 };
 
 
