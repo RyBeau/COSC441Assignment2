@@ -8,6 +8,7 @@
 
 #include <omnetpp.h>
 #include "AppMessage_m.h"
+#include "AppResponse_m.h"
 #include "CSRequest_m.h"
 #include "CSResponse_m.h"
 #include "MacPacket_m.h"

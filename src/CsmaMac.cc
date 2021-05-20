@@ -1,6 +1,7 @@
 //TODO implement what is outlined in the ned and .h file
 #include "CsmaMac.h"
 #include "AppMessage_m.h"
+#include "AppResponse_m.h"
 #include "CSRequest_m.h"
 #include "CSResponse_m.h"
 #include "MacPacket_m.h"
@@ -8,8 +9,7 @@
 #include "TransmissionRequest_m.h"
 #include "TransmissionConfirmation_m.h"
 #include <queue>
-#include "AppMessage_m.h"
-#include "AppResponse_m.h"
+
 
 Define_Module(CsmaMac);
 
