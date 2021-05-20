@@ -13,6 +13,8 @@
 #include "MacPacket_m.h"
 #include "MacPacketType_m.h"
 #include "TransmissionRequest_m.h"
+#include <queue>
+
 
 using namespace omnetpp;
 
@@ -65,6 +67,10 @@ private:
   int currentAttempts = 0;
   cMessage* backOffComplete;
   cMessage*ackTimeoutMessage;
+  void dropPacketChannelFail();
+  void dropAppMessage(AppMessage* appMsg);
+  void receiveAppMessage(cMessage* appMsg);
+  void checkBuffer();
   void performCarrierSense();
   void transmitHOLPacket();
   void handleCSResponse(CSResponse* response);
