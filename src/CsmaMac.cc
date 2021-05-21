@@ -258,9 +258,11 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
 }
 
 void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
+    dbg_enter("handleReceivedMessage");
     AppMessage* appMsg = macPacket->decapsulate();
     send(appMsg, toHigherId);
     scheduleAt(simTime() + macAckDelay, appMsg);
+    dbg_leave("handleReceivedMessage");
 }
 
 /**
