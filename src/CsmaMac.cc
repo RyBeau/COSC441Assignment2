@@ -1,4 +1,4 @@
-//TODO implement what is outlined in the ned and .h file
+
 #include "CsmaMac.h"
 #include "AppMessage_m.h"
 #include "AppResponse_m.h"
@@ -84,6 +84,12 @@ void CsmaMac::handleMessage(cMessage* msg){
     if(msg == ackTimeoutMessage && currentState == STATE_ACK){
         dbg_string("Ack Timeout Message Received");
         handleAckTimeout();
+        dbg_leave("handleMessage");
+        return;
+    }
+    if (dynamic_cast<AppMessage*>(msg) && isSelfMessage()) {
+        dbg_string("Ack Completed Message Received");
+        transmitAckForReceived(appMsg);
         dbg_leave("handleMessage");
         return;
     }
@@ -246,7 +252,7 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
         if (macPacket->getMacPacketType() == MacAckPacket){
             handleAck(macPacket);
         } else {
-            //TODO Handle Reception
+            handleReceivedMessage(macPacket);
         }
     } else {
         error("CsmaMac::handleTransmissionIndication: Message with wrong address");
@@ -254,6 +260,32 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
     delete macPacket;
     delete indication;
     dbg_leave("handleTransmissionIndication");
+}
+
+/**
+ * Handles a received message.
+ */
+void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
+    dbg_enter("handleReceivedMessage");
+    AppMessage* appMsg = macPacket->decapsulate();
+    send(appMsg, toHigherId);
+    scheduleAt(simTime() + macAckDelay, appMsg);
+    dbg_leave("handleReceivedMessage");
+}
+
+/**
+ * Transmits Ack for received packet.
+ */
+void CsmaMac::transmitAckForReceived(AppMessage* appMsg) {
+    dbg_enter("transmitAckForReceived");
+    MacPacket* macPacket = new MacPacket;
+    //Assuming this is swapped because we're sending back to who we received from
+    macPacket->setReceiverAddress(appMsg->getSenderAddress());
+    macPacket->setTransmitterAddress(appMsg->getReceiverAddress());
+    macPacket->setMackPacketType(MacAckPacket);
+    TransmissionRequest* tRequest = encapsulateMacPacket(macPacket);
+    send(tRequest, toTransceiverId);
+    dbg_leave("transmitAckForReceived");
 }
 
 /**
@@ -375,4 +407,5 @@ void CsmaMac::dbg_string(std::string str)
 CsmaMac::~CsmaMac(){
     delete backOffComplete;
     delete ackTimeoutMessage;
+    delete ackCompletedMessage;
 }
