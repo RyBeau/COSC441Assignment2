@@ -68,7 +68,6 @@ private:
   int currentAttempts = 0;
   cMessage* backOffComplete;
   cMessage*ackTimeoutMessage;
-  cMessage* ackCompletedMessage;
   void dropPacketChannelFail();
   void dropAppMessage(AppMessage* appMsg);
   void receiveAppMessage(cMessage* appMsg);

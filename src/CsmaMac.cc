@@ -36,7 +36,6 @@ void CsmaMac::initialize () {
     toTransceiverId     = findGate("toTransceiver");
     backOffComplete = new cMessage ("BackOffComplete");
     ackTimeoutMessage = new cMessage ("AckTimeout");
-    ackCompletedMessage = new cMessage ("AckComplete");
     queue<AppMessage*> buffer;
 }
 
@@ -261,7 +260,7 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
 void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
     AppMessage* appMsg = macPacket->decapsulate();
     send(appMsg, toHigherId);
-    scheduleAt(simTime() + macAckDelay, ackCompletedMessage);
+    scheduleAt(simTime() + macAckDelay, appMsg);
 }
 
 /**
