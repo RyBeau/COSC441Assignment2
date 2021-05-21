@@ -108,7 +108,7 @@ void CsmaMac::dropPacketChannelFail(void){
     buffer.pop();
     AppResponse* aResponse = new AppResponse;
     aResponse->setSequenceNumber(appMsg->getSequenceNumber());
-    aResponse->setOutcome(2);
+    aResponse->setOutcome(ChannelFailure);
     send(aResponse, toHigherId);
     delete appMsg;
     dbg_leave("dropPacketCS");
@@ -137,7 +137,7 @@ void CsmaMac::dropAppMessage(AppMessage* appMsg){
 
     AppResponse* aResponse = new AppResponse;
     aResponse->setSequenceNumber(appMsg->getSequenceNumber());
-    aResponse->setOutcome(1);
+    aResponse->setOutcome(BufferDrop);
     send(aResponse, toHigherId);
     delete appMsg;
 
@@ -197,7 +197,7 @@ void CsmaMac::performCarrierSense(){
 /**
  * Handles the received CSResponse message from the transceiver.
  */
-void CsmaMac::handleCSReponse(CSResponse* response){
+void CsmaMac::handleCSResponse(CSResponse* response){
     dbg_enter("handleCSResponse");
     if (!response->getBusyChannel()){
         transmitHOLPacket();
@@ -279,10 +279,9 @@ void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
 void CsmaMac::transmitAckForReceived(AppMessage* appMsg) {
     dbg_enter("transmitAckForReceived");
     MacPacket* macPacket = new MacPacket;
-    //Assuming this is swapped because we're sending back to who we received from
     macPacket->setReceiverAddress(appMsg->getSenderAddress());
-    macPacket->setTransmitterAddress(appMsg->getReceiverAddress());
-    macPacket->setMackPacketType(MacAckPacket);
+    macPacket->setTransmitterAddress(ownAddress);
+    macPacket->setMacPacketType(MacAckPacket);
     TransmissionRequest* tRequest = encapsulateMacPacket(macPacket);
     send(tRequest, toTransceiverId);
     dbg_leave("transmitAckForReceived");
@@ -327,7 +326,7 @@ MacPacket* CsmaMac::encapsulateAppMessage(AppMessage* message){
     MacPacket* macPacket = new MacPacket;
     macPacket->setReceiverAddress(message->getReceiverAddress());
     macPacket->setTransmitterAddress(ownAddress);
-    macPacket->setMackPacketType(MacDataPacket);
+    macPacket->setMacPacketType(MacDataPacket);
     macPacket->setByteLength(macOverheadSizeData);
     macPacket->encapsulate(message);
     dbg_leave("encapsulateAppMessage");
