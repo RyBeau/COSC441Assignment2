@@ -88,6 +88,7 @@ private:
   void handleAck(MacPacket* macPacket);
   void handleAckTimeout();
   void dropPacketSuccess();
+  void handleReceivedMessage(MacPacket* macPacket)
 };
 
 

@@ -246,6 +246,7 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
         if (macPacket->getMacPacketType() == MacAckPacket){
             handleAck(macPacket);
         } else {
+            handleReceivedMessage(macPacket);
             //TODO Handle Reception
         }
     } else {
@@ -254,6 +255,12 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
     delete macPacket;
     delete indication;
     dbg_leave("handleTransmissionIndication");
+}
+
+void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
+    AppMessage* appMsg = macPacket->decapsulate();
+    send(appMsg, toHigherId);
+    scheduleAt(simTime() + macAckDelay, ackCompletedMessage);
 }
 
 /**
