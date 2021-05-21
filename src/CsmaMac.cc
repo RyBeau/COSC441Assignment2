@@ -36,6 +36,7 @@ void CsmaMac::initialize () {
     toTransceiverId     = findGate("toTransceiver");
     backOffComplete = new cMessage ("BackOffComplete");
     ackTimeoutMessage = new cMessage ("AckTimeout");
+    ackCompletedMessage = new cMessage ("AckComplete");
     queue<AppMessage*> buffer;
 }
 
@@ -382,4 +383,5 @@ void CsmaMac::dbg_string(std::string str)
 CsmaMac::~CsmaMac(){
     delete backOffComplete;
     delete ackTimeoutMessage;
+    delete ackCompletedMessage;
 }
