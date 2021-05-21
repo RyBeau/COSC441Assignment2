@@ -111,6 +111,7 @@ void CsmaMac::dropPacketChannelFail(void){
     aResponse->setOutcome(ChannelFailure);
     send(aResponse, toHigherId);
     delete appMsg;
+    emit(accessFailedSigId, true);
     dbg_leave("dropPacketCS");
 }
 
@@ -126,6 +127,7 @@ void CsmaMac::dropPacketSuccess(void){
     aResponse->setOutcome(Success);
     send(aResponse, toHigherId);
     delete appMsg;
+    emit(accessSuccessSigId, true);
     dbg_leave("dropPacketSuccess");
 }
 
@@ -140,7 +142,7 @@ void CsmaMac::dropAppMessage(AppMessage* appMsg){
     aResponse->setOutcome(BufferDrop);
     send(aResponse, toHigherId);
     delete appMsg;
-
+    emit(bufferLossSigId, true);
     dbg_leave("dropAppMessage");
 }
 
@@ -151,6 +153,7 @@ void CsmaMac::receiveAppMessage(AppMessage* appMsg){
     dbg_enter("receiveAppMessage");
     if (buffer.size() < bufferSize) {
         buffer.push(appMsg);
+        emit(bufferEnteredSigId, true);
     } else {
         dropAppMessage(appMsg);
     }
@@ -173,6 +176,7 @@ void CsmaMac::checkBuffer(){
         } else {
             dbg_string("Max Attempts Reached");
             dropPacketChannelFail();
+            emit(numberAttemptsSigId, currentAttempts);
             currentAttempts = 0;
             currentBackoffs = 0;
             checkBuffer();
@@ -294,6 +298,7 @@ void CsmaMac::handleAck(MacPacket* macPacket){
     dbg_enter("handleAck");
     if (currentState == STATE_ACK && and macPacket->getTransmitterAddress() == buffer.front()->getReceiverAddress()){
         cancelEvent(ackTimeout);
+        emit(numberAttemptsSigId, currentAttempts);
         currentAttempts = 0;
         currentBackoffs = 0;
         dropPacketSuccess();
