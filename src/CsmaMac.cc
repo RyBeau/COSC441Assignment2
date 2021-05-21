@@ -265,6 +265,18 @@ void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
     dbg_leave("handleReceivedMessage");
 }
 
+void CsmaMac::transmitAckForReceived(AppMessage* appMsg) {
+    dbg_enter("transmitAckForReceived");
+    MacPacket* macPacket = new MacPacket;
+    //Assuming this is swapped because we're sending back to who we received from
+    macPacket->setReceiverAddress(appMsg->getSenderAddress());
+    macPacket->setTransmitterAddress(appMsg->getReceiverAddress());
+    macPacket->setMackPacketType(MacAckPacket);
+    TransmissionRequest* tRequest = encapsulateMacPacket(macPacket);
+    send(tRequest, toTransceiverId);
+    dbg_leave("transmitAckForReceived");
+}
+
 /**
  * Handles incoming acks.
  */
