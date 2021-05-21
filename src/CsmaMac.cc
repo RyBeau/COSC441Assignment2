@@ -1,4 +1,4 @@
-//TODO implement what is outlined in the ned and .h file
+
 #include "CsmaMac.h"
 #include "AppMessage_m.h"
 #include "AppResponse_m.h"
@@ -253,7 +253,6 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
             handleAck(macPacket);
         } else {
             handleReceivedMessage(macPacket);
-            //TODO Handle Reception
         }
     } else {
         error("CsmaMac::handleTransmissionIndication: Message with wrong address");
