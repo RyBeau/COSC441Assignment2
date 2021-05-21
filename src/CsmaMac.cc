@@ -87,6 +87,12 @@ void CsmaMac::handleMessage(cMessage* msg){
         dbg_leave("handleMessage");
         return;
     }
+    if (dynamic_cast<AppMessage*>(msg) && isSelfMessage()) {
+        dbg_string("Ack Completed Message Received");
+        transmitAckForReceived(appMsg);
+        dbg_leave("handleMessage");
+        return;
+    }
 
     delete msg;
     error("CsmaMac::handleMessage: unexpected message");
