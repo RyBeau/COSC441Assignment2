@@ -263,6 +263,9 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
     dbg_leave("handleTransmissionIndication");
 }
 
+/**
+ * Handles a received message.
+ */
 void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
     dbg_enter("handleReceivedMessage");
     AppMessage* appMsg = macPacket->decapsulate();
@@ -271,6 +274,9 @@ void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
     dbg_leave("handleReceivedMessage");
 }
 
+/**
+ * Transmits Ack for received packet.
+ */
 void CsmaMac::transmitAckForReceived(AppMessage* appMsg) {
     dbg_enter("transmitAckForReceived");
     MacPacket* macPacket = new MacPacket;
