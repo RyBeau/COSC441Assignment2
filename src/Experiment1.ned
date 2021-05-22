@@ -14,18 +14,13 @@
 // 
 
 package cosc441_mac;
+
 import cosc441_mac.CircularNetwork;
 
-network Experiment1
+network Experiment1 extends CircularNetwork
 {
-    submodules:
-        cNet: CircularNetwork {
-            parameters:
-                radius = 5m;
-                numTransmitters = 1;
-                macType = "CsmaMac";
-                
-        }
-
-        
+	parameters:
+		radius = 5m;
+		numTransmitters = 1;
+		macType = "CsmaMac";
 }

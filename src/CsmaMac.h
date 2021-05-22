@@ -7,6 +7,7 @@
 #define CSMAMAC_H_
 
 #include <omnetpp.h>
+#include "CsmaMac.h"
 #include "AppMessage_m.h"
 #include "AppResponse_m.h"
 #include "CSRequest_m.h"
@@ -14,6 +15,8 @@
 #include "MacPacket_m.h"
 #include "MacPacketType_m.h"
 #include "TransmissionRequest_m.h"
+#include "TransmissionConfirmation_m.h"
+#include "TransmissionIndication_m.h"
 #include <queue>
 
 
@@ -59,6 +62,7 @@ protected:
   int       fromTransceiverId;
   int       toTransceiverId;
   int       currentState = STATE_IDLE;
+  std::queue<AppMessage*> buffer;
 
 
 private:
@@ -82,14 +86,14 @@ private:
   void dbg_leave (std::string methname);
   void dbg_string(std::string str);
   MacPacket* encapsulateAppMessage(AppMessage* message);
-  TransmissionRequest* CsmaMac::encapsulateMacPacket(MacPacket* macPacket);
+  TransmissionRequest* encapsulateMacPacket(MacPacket* macPacket);
   void handleTransmissionConfirmation(TransmissionConfirmation* confirmation);
   void handleTransmissionIndication(TransmissionIndication* indication);
   void handleAck(MacPacket* macPacket);
-  void handleAckTimeout();
   void dropPacketSuccess();
   void handleReceivedMessage(MacPacket* macPacket);
   void transmitAckForReceived(AppMessage* appMsg);
+  void receiveAppMessage(AppMessage* appMsg);
 };
 
 
