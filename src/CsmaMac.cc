@@ -22,7 +22,6 @@ simsignal_t numberAttemptsSigId = cComponent::registerSignal("numberAttemptsSig"
 simsignal_t accessFailedSigId   = cComponent::registerSignal("accessFailedSig");
 simsignal_t accessSuccessSigId  = cComponent::registerSignal("accessSuccessSig");
 
-
 void CsmaMac::initialize () {
     ownAddress          = par("ownAddress");
     bufferSize          = par("bufferSize");
@@ -241,9 +240,6 @@ void CsmaMac::handleAckTimeout(){
     beginBackoff(par("attBackoffDistribution").doubleValue());
     currentBackoffs = 0;
     currentAttempts++;
-    if(currentAttempts == maxAttempts){
-        emit(accessSuccessSigId, true);
-    }
     dbg_leave("handAckTimeout");
 }
 

@@ -13,20 +13,16 @@ class AlohaMac : public CsmaMac {
 
  public:
 
-  // your public methods
-  ...
+    void handleMessage(cMessage* msg) override;
 
 
  protected:
 
-  // your protected methods
-  ...
+    void checkBuffer() override;
 
 
  private:
 
-  // your private methods
-  ...
 };
 
 
