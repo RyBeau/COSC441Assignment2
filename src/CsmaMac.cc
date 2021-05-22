@@ -231,6 +231,9 @@ void CsmaMac::handleAckTimeout(){
     beginBackoff(par("attBackoffDistribution").doubleValue());
     currentBackoffs = 0;
     currentAttempts++;
+    if(currentAttempts == maxAttempts){
+        emit(accessSuccessSigId, true);
+    }
     dbg_leave("handAckTimeout");
 }
 
