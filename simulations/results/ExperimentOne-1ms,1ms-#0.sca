@@ -1,14 +1,14 @@
 version 2
-run ExperimentOne-0-20210522-16:14:28-24644
+run ExperimentOne-0-20210522-16:19:33-20752
 attr configname ExperimentOne
-attr datetime 20210522-16:14:28
+attr datetime 20210522-16:19:33
 attr experiment ExperimentOne
 attr inifile omnetpp.ini
 attr iterationvars "$0=1ms, $1=1ms"
 attr iterationvarsf 1ms,1ms-
 attr measurement "$0=1ms, $1=1ms"
 attr network cosc441_mac.Experiment1
-attr processid 24644
+attr processid 20752
 attr repetition 0
 attr replication #0
 attr resultdir results
