@@ -286,7 +286,10 @@ void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
     dbg_enter("handleReceivedMessage");
     AppMessage* appMsg = (AppMessage*) macPacket->decapsulate();
     send(appMsg, toHigherId);
-    transmitAckForReceived(appMsg);
+    AppMessage* app = new AppMessage;
+    app->setReceiverAddress(appMsg->getSenderAddress());
+    app->setSenderAddress(appMsg->getReceiverAddress());
+    scheduleAt(simTime() + macAckDelay, app);
     dbg_leave("handleReceivedMessage");
 }
 
@@ -296,9 +299,10 @@ void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
 void CsmaMac::transmitAckForReceived(AppMessage* appMsg) {
     dbg_enter("transmitAckForReceived");
     MacPacket* macPacket = new MacPacket;
-    macPacket->setReceiverAddress(appMsg->getSenderAddress());
+    macPacket->setReceiverAddress(appMsg->getReceiverAddress());
     macPacket->setTransmitterAddress(ownAddress);
     macPacket->setMacPacketType(MacAckPacket);
+    macPacket->encapsulate(appMsg);
     TransmissionRequest* tRequest = encapsulateMacPacket(macPacket);
     send(tRequest, toTransceiverId);
     dbg_leave("transmitAckForReceived");
@@ -412,7 +416,7 @@ void CsmaMac::dbg_leave (std::string methname)
 
 void CsmaMac::dbg_string(std::string str)
 {
-    dbg_prefix();
+    dbg_prefix();    //delete ackCompletedMessage;
     EV << str
        << endl;
 }
@@ -424,5 +428,10 @@ void CsmaMac::dbg_string(std::string str)
 CsmaMac::~CsmaMac(){
     cancelAndDelete(backOffComplete);
     cancelAndDelete(ackTimeoutMessage);
-    //delete ackCompletedMessage;
+    while (buffer.size() > 0) {
+        delete buffer.front();
+        buffer.pop();
+
+    }
+
 }
