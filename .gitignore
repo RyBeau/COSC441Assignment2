@@ -1,4 +1,4 @@
 /out/
 *.exe
 *_m.*
-/results/
+/simulations/results/
