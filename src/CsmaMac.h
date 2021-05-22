@@ -7,6 +7,7 @@
 #define CSMAMAC_H_
 
 #include <omnetpp.h>
+#include "CsmaMac.h"
 #include "AppMessage_m.h"
 #include "AppResponse_m.h"
 #include "CSRequest_m.h"
@@ -14,11 +15,12 @@
 #include "MacPacket_m.h"
 #include "MacPacketType_m.h"
 #include "TransmissionRequest_m.h"
+#include "TransmissionConfirmation_m.h"
+#include "TransmissionIndication_m.h"
 #include <queue>
 
 
 using namespace omnetpp;
-
 
 // design a state machine and suitable states, name them here ..
 enum MacState {
@@ -40,12 +42,18 @@ public:
 
   // your public methods and data members
   void  initialize();
-  void handleMessage(cMessage* msg);
+  virtual void handleMessage(cMessage* msg);
   ~CsmaMac();
   
 protected:
 
   // your protected methods and data members
+  simsignal_t bufferLossSigId     = cComponent::registerSignal("bufferLossSig");
+  simsignal_t bufferEnteredSigId  = cComponent::registerSignal("bufferEnteredSig");
+  simsignal_t numberAttemptsSigId = cComponent::registerSignal("numberAttemptsSig");
+  simsignal_t accessFailedSigId   = cComponent::registerSignal("accessFailedSig");
+  simsignal_t accessSuccessSigId  = cComponent::registerSignal("accessSuccessSig");
+
   int       ownAddress;
   int       bufferSize;
   int       maxBackoffs;
@@ -59,37 +67,37 @@ protected:
   int       fromTransceiverId;
   int       toTransceiverId;
   int       currentState = STATE_IDLE;
+  int currentBackoffs = 0;
+  int currentAttempts = 0;
+  cMessage* backOffComplete;
+  cMessage*ackTimeoutMessage;
+  std::queue<AppMessage*> buffer;
+  void handleTransmissionConfirmation(TransmissionConfirmation* confirmation);
+  void handleTransmissionIndication(TransmissionIndication* indication);
+  void handleAckTimeout();
+  void dbg_prefix();
+  void dbg_enter (std::string methname);
+  void dbg_leave (std::string methname);
+  void dbg_string(std::string str);
+  void transmitAckForReceived(AppMessage* appMsg);
+  void transmitHOLPacket();
+  virtual void checkBuffer();
+  void dropPacketChannelFail();
+  void receiveAppMessage(AppMessage* appMsg);
 
 
 private:
 
   // your private methods and data members
-  int currentBackoffs = 0;
-  int currentAttempts = 0;
-  cMessage* backOffComplete;
-  cMessage*ackTimeoutMessage;
-  void dropPacketChannelFail();
   void dropAppMessage(AppMessage* appMsg);
-  void receiveAppMessage(cMessage* appMsg);
-  void checkBuffer();
   void performCarrierSense();
-  void transmitHOLPacket();
   void handleCSResponse(CSResponse* response);
   void beginBackoff(double backOffTime);
-  void dbg_prefix();
-  void handleAckTimeout();
-  void dbg_enter (std::string methname);
-  void dbg_leave (std::string methname);
-  void dbg_string(std::string str);
   MacPacket* encapsulateAppMessage(AppMessage* message);
-  TransmissionRequest* CsmaMac::encapsulateMacPacket(MacPacket* macPacket);
-  void handleTransmissionConfirmation(TransmissionConfirmation* confirmation);
-  void handleTransmissionIndication(TransmissionIndication* indication);
+  TransmissionRequest* encapsulateMacPacket(MacPacket* macPacket);
   void handleAck(MacPacket* macPacket);
-  void handleAckTimeout();
   void dropPacketSuccess();
   void handleReceivedMessage(MacPacket* macPacket);
-  void transmitAckForReceived(AppMessage* appMsg);
 };
 
 

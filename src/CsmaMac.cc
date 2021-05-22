@@ -14,12 +14,13 @@
 
 Define_Module(CsmaMac);
 
+using namespace omnetpp;
+
 simsignal_t bufferLossSigId     = cComponent::registerSignal("bufferLossSig");
 simsignal_t bufferEnteredSigId  = cComponent::registerSignal("bufferEnteredSig");
-simsignal_t numberAttemptsSigId = cComponent::registerSignal("numberAttemptsSigId");
+simsignal_t numberAttemptsSigId = cComponent::registerSignal("numberAttemptsSig");
 simsignal_t accessFailedSigId   = cComponent::registerSignal("accessFailedSig");
 simsignal_t accessSuccessSigId  = cComponent::registerSignal("accessSuccessSig");
-
 
 void CsmaMac::initialize () {
     ownAddress          = par("ownAddress");
@@ -36,7 +37,6 @@ void CsmaMac::initialize () {
     toTransceiverId     = findGate("toTransceiver");
     backOffComplete = new cMessage ("BackOffComplete");
     ackTimeoutMessage = new cMessage ("AckTimeout");
-    queue<AppMessage*> buffer;
 }
 
 /**
@@ -48,13 +48,36 @@ void CsmaMac::handleMessage(cMessage* msg){
     int arrivalGate = msg->getArrivalGateId();
 
     if (dynamic_cast<AppMessage*>(msg) && arrivalGate == fromHigherId){
-           receiveAppMessage((AppMessage) msg);
+           receiveAppMessage((AppMessage*) msg);
            return;
     }
 
-    if (dynamic_cast<CSResponse*>(msg) && arrivalGate == fromTransceiverId && currentState = STATE_CS){
+    if (dynamic_cast<CSResponse*>(msg) && arrivalGate == fromTransceiverId && currentState == STATE_CS){
         dbg_string("Received CSReponse Message");
-        handleCSResponse((CSResponse) msg);
+        handleCSResponse((CSResponse*) msg);
+        dbg_leave("handleMessage");
+        return;
+    }
+
+
+
+    if(dynamic_cast<TransmissionConfirmation*>(msg) && arrivalGate == fromTransceiverId && currentState == STATE_TCONF){
+        dbg_string("Transmission Confirmation Received");
+        handleTransmissionConfirmation((TransmissionConfirmation*) msg);
+        dbg_leave("handleMessage");
+        return;
+    }
+
+    if(dynamic_cast<TransmissionConfirmation*>(msg) && arrivalGate == fromTransceiverId){
+        dbg_string("Transmission Confirmation for Ack Received");
+        delete msg;
+        dbg_leave("handleMessage");
+        return;
+    }
+
+    if(dynamic_cast<TransmissionIndication*>(msg) && arrivalGate == fromTransceiverId){
+        dbg_string("Transmission Indication Received");
+        handleTransmissionIndication((TransmissionIndication*) msg);
         dbg_leave("handleMessage");
         return;
     }
@@ -66,20 +89,6 @@ void CsmaMac::handleMessage(cMessage* msg){
         return;
     }
 
-    if(dynamic_cast<TransmissionConfirmation*>(msg) && arrivalGate == fromTransceiverId && currentState = STATE_TCONF){
-        dbg_string("Transmission Confirmation Received");
-        handleTransmissionConfirmation((TransmissionConfirmation* msg));
-        dbg_leave("handleMessage");
-        return;
-    }
-
-    if(dynamic_cast<TransmissionIndication*>(msg) && arrivalGate == fromTransceiverId){
-        dbg_string("Transmission Indication Received");
-        handleTransmissionIndication((TransmissionIndication) msg);
-        dbg_leave("handleMessage");
-        return;
-    }
-
 
     if(msg == ackTimeoutMessage && currentState == STATE_ACK){
         dbg_string("Ack Timeout Message Received");
@@ -87,9 +96,9 @@ void CsmaMac::handleMessage(cMessage* msg){
         dbg_leave("handleMessage");
         return;
     }
-    if (dynamic_cast<AppMessage*>(msg) && isSelfMessage()) {
+    if (dynamic_cast<AppMessage*>(msg) && msg->isSelfMessage()) {
         dbg_string("Ack Completed Message Received");
-        transmitAckForReceived(appMsg);
+        transmitAckForReceived((AppMessage*) msg);
         dbg_leave("handleMessage");
         return;
     }
@@ -157,7 +166,7 @@ void CsmaMac::receiveAppMessage(AppMessage* appMsg){
     } else {
         dropAppMessage(appMsg);
     }
-    if (currentState == State_IDLE) {
+    if (currentState == STATE_IDLE) {
         checkBuffer();
     }
     dbg_leave("receiveAppMessage");
@@ -218,7 +227,7 @@ void CsmaMac::handleCSResponse(CSResponse* response){
             beginBackoff(par("attBackoffDistribution").doubleValue());
         }
     }
-    delete CSResponse;
+    delete response;
     dbg_leave("handleCSReponse");
 }
 
@@ -231,9 +240,6 @@ void CsmaMac::handleAckTimeout(){
     beginBackoff(par("attBackoffDistribution").doubleValue());
     currentBackoffs = 0;
     currentAttempts++;
-    if(currentAttempts == maxAttempts){
-        emit(accessSuccessSigId, true);
-    }
     dbg_leave("handAckTimeout");
 }
 
@@ -254,7 +260,7 @@ void CsmaMac::handleTransmissionConfirmation(TransmissionConfirmation* confirmat
  */
 void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
     dbg_enter("handleTransmissionIndication");
-    MacPacket* macPacket = indication->decapsulate();
+    MacPacket* macPacket = (MacPacket*) indication->decapsulate();
     if (macPacket->getReceiverAddress() == ownAddress){
         if (macPacket->getMacPacketType() == MacAckPacket){
             handleAck(macPacket);
@@ -274,9 +280,12 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
  */
 void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
     dbg_enter("handleReceivedMessage");
-    AppMessage* appMsg = macPacket->decapsulate();
+    AppMessage* appMsg = (AppMessage*) macPacket->decapsulate();
     send(appMsg, toHigherId);
-    scheduleAt(simTime() + macAckDelay, appMsg);
+    AppMessage* app = new AppMessage;
+    app->setReceiverAddress(appMsg->getSenderAddress());
+    app->setSenderAddress(appMsg->getReceiverAddress());
+    scheduleAt(simTime() + macAckDelay, app);
     dbg_leave("handleReceivedMessage");
 }
 
@@ -286,9 +295,10 @@ void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
 void CsmaMac::transmitAckForReceived(AppMessage* appMsg) {
     dbg_enter("transmitAckForReceived");
     MacPacket* macPacket = new MacPacket;
-    macPacket->setReceiverAddress(appMsg->getSenderAddress());
+    macPacket->setReceiverAddress(appMsg->getReceiverAddress());
     macPacket->setTransmitterAddress(ownAddress);
     macPacket->setMacPacketType(MacAckPacket);
+    macPacket->encapsulate(appMsg);
     TransmissionRequest* tRequest = encapsulateMacPacket(macPacket);
     send(tRequest, toTransceiverId);
     dbg_leave("transmitAckForReceived");
@@ -299,8 +309,8 @@ void CsmaMac::transmitAckForReceived(AppMessage* appMsg) {
  */
 void CsmaMac::handleAck(MacPacket* macPacket){
     dbg_enter("handleAck");
-    if (currentState == STATE_ACK && and macPacket->getTransmitterAddress() == buffer.front()->getReceiverAddress()){
-        cancelEvent(ackTimeout);
+    if (currentState == STATE_ACK && macPacket->getTransmitterAddress() == buffer.front()->getReceiverAddress()){
+        cancelEvent(ackTimeoutMessage);
         emit(numberAttemptsSigId, currentAttempts);
         currentAttempts = 0;
         currentBackoffs = 0;
@@ -319,7 +329,7 @@ void CsmaMac::handleAck(MacPacket* macPacket){
  */
 void CsmaMac::transmitHOLPacket(){
     dbg_enter("transmitPacket");
-    MacPacket* macPacket = encapsulateAppMessage(buffer.front());
+    MacPacket* macPacket = encapsulateAppMessage((AppMessage*) buffer.front());
     TransmissionRequest* transRequest = encapsulateMacPacket(macPacket);
     send(transRequest, toTransceiverId);
     currentState = STATE_TCONF;
@@ -336,7 +346,7 @@ MacPacket* CsmaMac::encapsulateAppMessage(AppMessage* message){
     macPacket->setTransmitterAddress(ownAddress);
     macPacket->setMacPacketType(MacDataPacket);
     macPacket->setByteLength(macOverheadSizeData);
-    macPacket->encapsulate(message);
+    macPacket->encapsulate(message->dup());
     dbg_leave("encapsulateAppMessage");
     return macPacket;
 }
@@ -357,7 +367,7 @@ TransmissionRequest* CsmaMac::encapsulateMacPacket(MacPacket* macPacket){
  */
 void CsmaMac::beginBackoff(double backOffTime){
     dbg_enter("beginBackoff");
-    currentBackOffs++;
+    currentBackoffs++;
     scheduleAt(simTime() + backOffTime, backOffComplete);
     currentState = STATE_BACKOFF;
     dbg_leave("beginBackoff");
@@ -375,7 +385,7 @@ void CsmaMac::dbg_prefix()
 {
     EV << "t = " << simTime()
        << " - CsmaMac-" << ownAddress
-       << "s = " << stateStrings[state]
+       << "s = " << stateStrings[currentState]
        << endl;
 }
 
@@ -402,7 +412,7 @@ void CsmaMac::dbg_leave (std::string methname)
 
 void CsmaMac::dbg_string(std::string str)
 {
-    dbg_prefix();
+    dbg_prefix();    //delete ackCompletedMessage;
     EV << str
        << endl;
 }
@@ -412,7 +422,12 @@ void CsmaMac::dbg_string(std::string str)
  * Deletes any allocated messages.
  */
 CsmaMac::~CsmaMac(){
-    delete backOffComplete;
-    delete ackTimeoutMessage;
-    delete ackCompletedMessage;
+    cancelAndDelete(backOffComplete);
+    cancelAndDelete(ackTimeoutMessage);
+    while (buffer.size() > 0) {
+        delete buffer.front();
+        buffer.pop();
+
+    }
+
 }

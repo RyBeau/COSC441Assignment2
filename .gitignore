@@ -1,3 +1,7 @@
 /out/
 *.exe
 *_m.*
+/simulations/results/
+*-log
+*.log
+*-log.*

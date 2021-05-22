@@ -33,6 +33,7 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 OBJS = \
     $O/Application.o \
     $O/Channel.o \
+    $O/CsmaMac.o \
     $O/Transceiver.o \
     $O/AppMessage_m.o \
     $O/AppMessageStatus_m.o \
