@@ -60,9 +60,11 @@ void AlohaMac::handleMessage(cMessage* msg){
         dbg_leave("handleMessage");
         return;
     }
-    if (dynamic_cast<AppMessage*>(msg) && msg->isSelfMessage()) {
+    if (msg == ackSendMessage && msg->isSelfMessage()) {
         dbg_string("Ack Completed Message Received");
-        transmitAckForReceived((AppMessage*) msg);
+        transmitAckForReceived((AppMessage*) ackQueue.front());
+        delete ackQueue.front();
+        ackQueue.pop();
         dbg_leave("handleMessage");
         return;
     }
@@ -94,7 +96,22 @@ void AlohaMac::checkBuffer(){
     dbg_leave("checkBuffer");
 }
 
-
+/**
+ * Deletes any allocated messages.
+ */
+AlohaMac::~AlohaMac(){
+    cancelAndDelete(backOffComplete);
+    cancelAndDelete(ackTimeoutMessage);
+    cancelAndDelete(ackSendMessage);
+    while (buffer.size() > 0) {
+        delete buffer.front();
+        buffer.pop();
+    }
+    while (ackQueue.size() > 0) {
+        delete ackQueue.front();
+        ackQueue.pop();
+    }
+}
 
 
 

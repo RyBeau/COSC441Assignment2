@@ -31,6 +31,7 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
 OBJS = \
+    $O/AlohaMac.o \
     $O/Application.o \
     $O/Channel.o \
     $O/CsmaMac.o \
