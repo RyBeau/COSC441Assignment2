@@ -96,22 +96,22 @@ void AlohaMac::checkBuffer(){
     dbg_leave("checkBuffer");
 }
 
-/**
- * Deletes any allocated messages.
- */
-AlohaMac::~AlohaMac(){
-    cancelAndDelete(backOffComplete);
-    cancelAndDelete(ackTimeoutMessage);
-    cancelAndDelete(ackSendMessage);
-    while (buffer.size() > 0) {
-        delete buffer.front();
-        buffer.pop();
-    }
-    while (ackQueue.size() > 0) {
-        delete ackQueue.front();
-        ackQueue.pop();
-    }
-}
+///**
+// * Deletes any allocated messages.
+// */
+//AlohaMac::~AlohaMac(){
+//    cancelAndDelete(backOffComplete);
+//    cancelAndDelete(ackTimeoutMessage);
+//    cancelAndDelete(ackSendMessage);
+//    while (buffer.size() > 0) {
+//        delete buffer.front();
+//        buffer.pop();
+//    }
+//    while (ackQueue.size() > 0) {
+//        delete ackQueue.front();
+//        ackQueue.pop();
+//    }
+//}
 
 
 
