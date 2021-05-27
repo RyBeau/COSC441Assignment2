@@ -1,5 +1,9 @@
 /*
+ * AlohaMac.h
+ *  Authors: Juliet Samandari & Ryan Beaumont
+ *  Date: May 2021
  */
+
 
 #ifndef ALOHAMAC_H_
 #define ALOHAMAC_H_

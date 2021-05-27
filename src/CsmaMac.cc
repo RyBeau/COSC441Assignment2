@@ -1,3 +1,8 @@
+/*
+ * CsmaMac.cc
+ *  Authors: Juliet Samandari & Ryan Beaumont
+ *   Date: May 2021
+ */
 
 #include "CsmaMac.h"
 #include "AppMessage_m.h"
