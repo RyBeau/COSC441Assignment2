@@ -1,5 +1,5 @@
 /*
- * AlohaMac.h
+ * AlohaMac.cc
  *  Authors: Juliet Samandari & Ryan Beaumont
  *  Date: May 2021
  */
