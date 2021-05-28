@@ -1,8 +1,7 @@
 /*
- * AlohaMac.cc
- *
- *  Created on: May 22, 2021
- *      Author: jsa117
+ * AlohaMac.h
+ *  Authors: Juliet Samandari & Ryan Beaumont
+ *  Date: May 2021
  */
 
 #include "AlohaMac.h"
