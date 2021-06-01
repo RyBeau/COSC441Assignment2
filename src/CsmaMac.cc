@@ -42,6 +42,7 @@ void CsmaMac::initialize () {
     toTransceiverId     = findGate("toTransceiver");
     backOffComplete = new cMessage ("BackOffComplete");
     ackTimeoutMessage = new cMessage ("AckTimeout");
+    ackSendMessage = new cMessage ("AckSendMessage");
 }
 
 /**
@@ -101,9 +102,11 @@ void CsmaMac::handleMessage(cMessage* msg){
         dbg_leave("handleMessage");
         return;
     }
-    if (dynamic_cast<AppMessage*>(msg) && msg->isSelfMessage()) {
+    if (msg == ackSendMessage && msg->isSelfMessage()){
         dbg_string("Ack Completed Message Received");
-        transmitAckForReceived((AppMessage*) msg);
+        transmitAckForReceived((AppMessage*) ackQueue.front());
+        delete ackQueue.front();
+        ackQueue.pop();
         dbg_leave("handleMessage");
         return;
     }
@@ -286,11 +289,9 @@ void CsmaMac::handleTransmissionIndication(TransmissionIndication* indication){
 void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
     dbg_enter("handleReceivedMessage");
     AppMessage* appMsg = (AppMessage*) macPacket->decapsulate();
+    ackQueue.push(appMsg->dup());
     send(appMsg, toHigherId);
-    AppMessage* app = new AppMessage;
-    app->setReceiverAddress(appMsg->getSenderAddress());
-    app->setSenderAddress(appMsg->getReceiverAddress());
-    scheduleAt(simTime() + macAckDelay, app);
+    scheduleAt(simTime() + macAckDelay, ackSendMessage);
     dbg_leave("handleReceivedMessage");
 }
 
@@ -300,10 +301,10 @@ void CsmaMac::handleReceivedMessage(MacPacket* macPacket) {
 void CsmaMac::transmitAckForReceived(AppMessage* appMsg) {
     dbg_enter("transmitAckForReceived");
     MacPacket* macPacket = new MacPacket;
-    macPacket->setReceiverAddress(appMsg->getReceiverAddress());
+    macPacket->setReceiverAddress(appMsg->getSenderAddress());
     macPacket->setTransmitterAddress(ownAddress);
     macPacket->setMacPacketType(MacAckPacket);
-    macPacket->encapsulate(appMsg);
+    macPacket->setByteLength(macOverheadSizeAck);
     TransmissionRequest* tRequest = encapsulateMacPacket(macPacket);
     send(tRequest, toTransceiverId);
     dbg_leave("transmitAckForReceived");
@@ -429,10 +430,13 @@ void CsmaMac::dbg_string(std::string str)
 CsmaMac::~CsmaMac(){
     cancelAndDelete(backOffComplete);
     cancelAndDelete(ackTimeoutMessage);
+    cancelAndDelete(ackSendMessage);
     while (buffer.size() > 0) {
         delete buffer.front();
         buffer.pop();
-
     }
-
+    while (ackQueue.size() > 0) {
+        delete ackQueue.front();
+        ackQueue.pop();
+    }
 }

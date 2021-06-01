@@ -71,7 +71,9 @@ protected:
   int currentBackoffs = 0;
   int currentAttempts = 0;
   cMessage* backOffComplete;
-  cMessage*ackTimeoutMessage;
+  cMessage* ackTimeoutMessage;
+  cMessage* ackSendMessage;
+  std::queue<AppMessage*> ackQueue;
   std::queue<AppMessage*> buffer;
   void handleTransmissionConfirmation(TransmissionConfirmation* confirmation);
   void handleTransmissionIndication(TransmissionIndication* indication);
