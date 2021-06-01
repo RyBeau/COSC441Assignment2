@@ -43,6 +43,15 @@ void CsmaMac::initialize () {
     backOffComplete = new cMessage ("BackOffComplete");
     ackTimeoutMessage = new cMessage ("AckTimeout");
     ackSendMessage = new cMessage ("AckSendMessage");
+
+
+    assert(bufferSize > 0);
+    assert(maxBackoffs > 0);
+    assert(maxAttempts > 0);
+    assert(macOverheadSizeData > 0);
+    assert(macOverheadSizeAck > 0);
+    assert(macAckDelay >= 0);
+    assert(ackTimeout > 0);
 }
 
 /**

@@ -18,7 +18,6 @@ class AlohaMac : public CsmaMac {
  public:
 
     void handleMessage(cMessage* msg) override;
-//    ~AlohaMac();
 
  protected:
 
